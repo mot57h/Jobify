@@ -1,19 +1,31 @@
-import { Outlet } from 'react-router-dom';
-
+import { Outlet ,redirect , useLoaderData,useNavigate} from 'react-router-dom';
 import Wrapper from '../assets/wrappers/Dashboard';
 import { Navbar, BigSidebar, SmallSidebar } from '../components';
-
 import { useState, createContext, useContext } from 'react';
+import customFetch from '../utils/customFetch';
+
+export const loader = async () => {
+  try {
+    const { data } = await customFetch.get('/users/current-user');
+    return { user: data.user }; // ✅ Make sure the structure matches usage
+  } catch (error) {
+    return redirect('/');
+  }
+};
 const DashboardContext = createContext();
-const Dashboard = () => {
-  // temp
-  const user = { name: 'john' };
+const DashboardLayout = ({isDarkThemeEnabled }) => {
+  const { user } = useLoaderData(); // ✅ user is coming from loader now
+  const  navigate =useNavigate();
+  console.log(user);
 
   const [showSidebar, setShowSidebar] = useState(false);
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(isDarkThemeEnabled);
 
   const toggleDarkTheme = () => {
-    console.log('toggle dark theme');
+    const newDarkTheme =!isDarkTheme;
+    setIsDarkTheme(newDarkTheme);
+    document.body.classList.toggle('dark-theme',newDarkTheme);
+    localStorage.setItem('darkTheme',newDarkTheme);
   };
 
   const toggleSidebar = () => {
@@ -21,7 +33,9 @@ const Dashboard = () => {
   };
 
   const logoutUser = async () => {
-    console.log('logout user');
+      navigate('/');
+      await customFetch.get('/auth/logout');
+      toast.success('Logging out...');
   };
   return (
     <DashboardContext.Provider
@@ -41,7 +55,7 @@ const Dashboard = () => {
           <div>
             <Navbar />
             <div className='dashboard-page'>
-              <Outlet />
+              <Outlet context={{ user }}/>
             </div>
           </div>
         </main>
@@ -52,4 +66,4 @@ const Dashboard = () => {
 
 export const useDashboardContext = () => useContext(DashboardContext);
 
-export default Dashboard;
+export default DashboardLayout;

@@ -13,7 +13,7 @@ import { authenticateUser } from './middleware/authMiddleware.js';
 // Routes (✅ import BEFORE use)
 import authRouter from './routes/authRouter.js';
 import jobRouter from './routes/jobRouter.js';
-
+import userRouter from './routes/userRouter.js';
 // Dev logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -23,10 +23,14 @@ if (process.env.NODE_ENV === 'development') {
 app.use(cookieParser());
 app.use(express.json());
 
-// Routes
-app.use('/api/v1/auth', authRouter); // Public routes
-app.use('/api/v1/jobs', authenticateUser, jobRouter); // Protected routes
+app.get('/api/v1/test', (req, res) => {
+  res.json({ msg: 'test route' });
+});
 
+// Routes
+app.use('/api/v1/jobs', authenticateUser, jobRouter); // Protected routes
+app.use('/api/v1/users', authenticateUser, userRouter);
+app.use('/api/v1/auth', authRouter); // Public routes
 // Root
 app.get('/', (req, res) => {
   res.send('Hello World');

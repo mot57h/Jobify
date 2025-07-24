@@ -1,16 +1,14 @@
 import Job from '../models/JobModel.js';
 import { StatusCodes } from 'http-status-codes';
 
-
-
 export const getAllJobs = async (req, res) => {
-  console.log(req);
-  const jobs = await Job.find({})
+
+  const jobs = await Job.find({ createdBy: req.user.userId });
   res.status(StatusCodes.OK).json({ jobs });
 };
 
 export const createJob = async (req, res) => {
-  console.log('Request body:', req.body);
+  req.body.createdBy = req.user.userId;
   const job = await Job.create(req.body);
   res.status(StatusCodes.CREATED).json({ job });
 };
@@ -34,8 +32,13 @@ export const updateJob = async (req, res) => {
  
 
 export const deleteJob = async (req, res) => {
-   const removedJob = await Job.findByIdAndDelete(id);
-  
-  
-  res.status(StatusCodes.OK).json({ msg: 'job deleted',job: removedJob });
+  const { id } = req.params; // ✅ extract the ID from the URL
+
+  const removedJob = await Job.findByIdAndDelete(id);
+
+  if (!removedJob) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: 'Job not found' });
+  }
+
+  res.status(StatusCodes.OK).json({ msg: 'Job deleted', job: removedJob });
 };
