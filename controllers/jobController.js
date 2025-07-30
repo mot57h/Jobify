@@ -1,40 +1,53 @@
 import Job from '../models/JobModel.js';
 import { StatusCodes } from 'http-status-codes';
 
-export const getAllJobs = async (req, res) => {
-
-  const jobs = await Job.find({ createdBy: req.user.userId });
+// Get all jobs created by the logged-in user
+export const getAllJobs = async (request, res) => {
+  const jobs = await Job.find({ createdBy: request.user.userId });
   res.status(StatusCodes.OK).json({ jobs });
 };
 
-export const createJob = async (req, res) => {
-  req.body.createdBy = req.user.userId;
-  const job = await Job.create(req.body);
+// Create a new job
+export const createJob = async (request, res) => {
+  request.body.createdBy = request.user.userId;
+  const job = await Job.create(request.body);
   res.status(StatusCodes.CREATED).json({ job });
 };
 
-export const getJob = async (req, res) => {
-  const { id } = req.params;
+// Get a single job by ID
+export const getJob = async (request, res) => {
+  const { id } = request.params;
 
   const job = await Job.findById(id);
   res.status(StatusCodes.OK).json({ job });
 };
 
-export const updateJob = async (req, res) => {
-  const updatedJob = await Job.findByIdAndUpdate(id, req.body, {
-    new: true,
-  });
+// Update an existing job (✅ corrected with `id`)
+export const updateJob = async (request, res) => {
+  const { id } = request.params;
 
- 
-  res.status(StatusCodes.OK).json({ msg:'job modified' ,job: updatedJob });
+  // Optional: ensure user can only update their own job
+  const updatedJob = await Job.findOneAndUpdate(
+    { _id: id, createdBy: request.user.userId },
+    request.body,
+    { new: true }
+  );
+
+  if (!updatedJob) {
+    return res.status(StatusCodes.NOT_FOUND).json({ msg: 'Job not found or unauthorized' });
+  }
+
+  res.status(StatusCodes.OK).json({ msg: 'Job modified', job: updatedJob });
 };
 
- 
+// Delete a job by ID
+export const deleteJob = async (request, res) => {
+  const { id } = request.params;
 
-export const deleteJob = async (req, res) => {
-  const { id } = req.params; // ✅ extract the ID from the URL
-
-  const removedJob = await Job.findByIdAndDelete(id);
+  const removedJob = await Job.findOneAndDelete({
+    _id: id,
+    createdBy: request.user.userId, // ✅ user can delete only their own jobs
+  });
 
   if (!removedJob) {
     return res.status(StatusCodes.NOT_FOUND).json({ msg: 'Job not found' });

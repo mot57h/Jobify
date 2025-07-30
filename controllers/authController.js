@@ -4,22 +4,22 @@ import { hashPassword,comparePassword } from '../utils/passwordUtils.js';
 import { UnauthenticatedError } from '../errors/customErrors.js';
 import { createJWT } from '../utils/tokenUtils.js';
 
-export const register = async (req, res) => {
+export const register = async (request, res) => {
   const isFirstAccount = (await User.countDocuments()) === 0;
-  req.body.role = isFirstAccount ? 'admin' : 'user';
+  request.body.role = isFirstAccount ? 'admin' : 'user';
   
-  const hashedPassword = await hashPassword(req.body.password);
-  req.body.password = hashedPassword;
+  const hashedPassword = await hashPassword(request.body.password);
+  request.body.password = hashedPassword;
  
   
-  const user = await User.create(req.body);
+  const user = await User.create(request.body);
   res.status(StatusCodes.CREATED).json({msg:' user created'});
 };
 
-export const login = async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
+export const login = async (request, res) => {
+  const user = await User.findOne({ email: request.body.email });
 
-  const isValidUser = user && await comparePassword(req.body.password, user.password);
+  const isValidUser = user && await comparePassword(request.body.password, user.password);
 
   if (!isValidUser) throw new UnauthenticatedError('invalid credentials');
 
@@ -33,7 +33,7 @@ export const login = async (req, res) => {
     res.status(StatusCodes.OK).json({ msg: 'user logged in' });
 };
 
-export const logout = (req,res) => {
+export const logout = (request,res) => {
   res.cookie('token', 'logout', {
     httpOnly: true,
     expires: new Date(Date.now()),

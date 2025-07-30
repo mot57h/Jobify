@@ -1,4 +1,12 @@
-const FormRow = ({ type, name, labelText, defaultValue = '' }) => {
+// components/FormRow.jsx
+
+const FormRow = ({
+  type,
+  name,
+  labelText,
+  defaultValue = '',
+  ...rest // This collects things like "required", "placeholder", etc.
+}) => {
   return (
     <div className='form-row'>
       <label htmlFor={name} className='form-label'>
@@ -10,7 +18,7 @@ const FormRow = ({ type, name, labelText, defaultValue = '' }) => {
         name={name}
         className='form-input'
         defaultValue={defaultValue}
-        required
+        {...rest} // ⬅️ This line is critical!
       />
     </div>
   );
